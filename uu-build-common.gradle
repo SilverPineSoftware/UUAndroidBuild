@@ -1,0 +1,82 @@
+def getVersionName = { ->
+    def name = project.hasProperty('versionName') ? versionName : "1.0"
+    println "VersionName is set to $name"
+
+    return "\"" + name.trim() + "\""
+}
+
+def getBuildBranch = { ->
+
+    def val = null
+
+    try {
+        //	git rev-parse --abbrev-ref HEAD
+        def cmdLineOut = new ByteArrayOutputStream()
+        exec {
+            commandLine "git", "rev-parse", "--abbrev-ref", "HEAD"
+            standardOutput = cmdLineOut
+        }
+
+        val = "$cmdLineOut"
+
+    } catch (ex) {
+        project.logger.lifecycle("Caught exception getting branch name from git: $ex")
+    }
+
+    if (val == null) {
+        val = System.getenv('BRANCH_PATH')
+        if (val != null) {
+            val = val.replace("refs\\heads\\", "")
+            val = val.replace("\\", "/")
+        }
+    }
+
+    if (val == null) {
+        val = ""
+    }
+
+    project.logger.lifecycle("buildBranch: $val")
+
+    return "\"" + val.trim() + "\""
+}
+
+def getBuildCommitHash = { ->
+
+    def val = null
+
+    try {
+        //	git rev-parse --abbrev-ref HEAD
+        def cmdLineOut = new ByteArrayOutputStream()
+        exec {
+            commandLine "git", "rev-parse", "HEAD"
+            standardOutput = cmdLineOut
+        }
+
+        val = "$cmdLineOut"
+
+    } catch (ex) {
+        project.logger.lifecycle("Caught exception getting branch commit hash from git: $ex")
+    }
+
+    if (val == null) {
+        val = System.getenv('BUILD_VCS_NUMBER_GitRepo')
+    }
+
+    if (val == null) {
+        val = ""
+    }
+
+    project.logger.lifecycle("buildCommitHash: $val")
+
+    return "\"" + val.trim() + "\""
+}
+
+def getBuildDate = { ->
+
+    DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss ZZZ")
+    def val = df.format(new Date())
+
+    project.logger.lifecycle("buildDate: $val")
+
+    return "\"" + val.trim().replace("'", "") + "\""
+}
